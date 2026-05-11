@@ -1,0 +1,145 @@
+# Magento 2 Development (Mark Shust Docker)
+This project runs on Mark Shust's Docker environment. All commands MUST run through `bin/` wrappers.
+
+## Essential Commands
+- **Magento CLI:** `bin/magento [command]` (e.g., `bin/magento setup:upgrade`)
+- **Composer:** `bin/composer [command]`
+- **Cache:** `bin/magento cache:flush`
+- **Reindex:** `bin/magento indexer:reindex`
+- **Docker Control:** `bin/start`, `bin/stop`, `bin/restart`
+- **Database:** `bin/mysql` or `bin/mysqldump`
+- **Testing:** `bin/mftf` or `bin/phpunit`
+
+## Specialized Headless & Docker Rules
+- **Headless Focus**: Prioritize GraphQL and REST Web APIs. Avoid Blocks/Templates unless specified.
+- **Service Contracts**: Always use `Api/` interfaces for business logic and data transport.
+- **Generated Files**: If DI errors occur, suggest `rm -rf generated/code/*`.
+- **Docker Utility**: Use `bin/fixperms` for permission issues and `bin/redis-cli flushall` for deep cache cleaning.
+- **GraphQL**: When creating GraphQL schemas, ensure all resolvers are stateless and performant.
+
+## Development Standards
+- **File Structure:**
+  - Custom modules: `app/code/VendorName/ModuleName`
+  - Custom themes: `app/design/frontend/VendorName/theme-name` (but we usually use Magento in headless mode with an external frontend so we should not need to work on themes)
+- **Naming Conventions:**
+  - Classes: CamelCase (e.g., `MyProcessor`).
+  - Methods/Variables: camelCase (e.g., `processData`).
+  - Tables/Columns: snake_case.
+- **Coding Style:**
+  - Follow Magento Coding Standards (PSR-12).
+  - Use short array syntax `[]` instead of `array()`
+  - Order imports alphabetically and group by namespace
+  - For dependencies, favor constructor injection, use type hints
+  - Handle exceptions properly, never suppress or swallow them
+  - Use PHP 8.1+ features where possible
+  - Always use constructor property promotion
+  - Always declare parameter types and return types in methods
+  - Don't add return types to functions that need to abide by an interface (models, resource models, collections, etc.)
+  - Always add proper type casting for integer returns in model classes:
+    - For nullable integer fields: `return $this->getData(FIELD) ? (int) $this->getData(FIELD) : null;`
+    - For required integer fields: `return (int) $this->getData(FIELD);`
+  - Add line break to the end of files
+  - Add @throws tags to docblocks for exceptions, where appropriate
+  - Don't use trailing commaas for all arrays and method arguments
+  - Import all classes with use statements rather than using FQCNs
+  - Do not add copyright headers, but add line break and declare(strict_types=1) to top of each PHP class
+  - Don't nest arrays on single line, always use multi-line format for readability
+  - Always add extra line breaks between conditions and before return statements, unless only statement in block
+  - Always add an extra line break after parent::__construct calls
+  - Methods that contain one or no parameters break curly brackets onto a new line
+  - Methods with multiple parameters should have parameters on new lines with trailing commas
+  - Use Dependency Injection via `__construct`. Never use `ObjectManager` directly.
+  - Use Plugins/Observers over Preferences to ensure cross-module compatibility; use `db_schema.xml` for database changes.
+  - Add docblock to each method when creating new API interfaces as it's required by Magento
+
+## Common Workflows
+1. **Module Creation:** Create registration.php and etc/module.xml, then run `bin/magento setup:upgrade`.
+2. **Static Content:** For CSS/JS changes, don't run `bin/magento setup:static-content:deploy -f` since we are in developer mode and don't need it
+3. **Logs:** Watch logs with `bin/log` or check `var/log/system.log`.
+
+## 🤖 Agent Orchestration
+This project uses specialized sub-agents organized into specialized categories. Before starting a task, read the corresponding agent file in `.claude-agents/magento-agents` to align with specific best practices:
+
+### Agent Categories
+1. **01-core-development/** - Core Magento development experts
+   - `code-reviewer.md` - Elite code review expert for AI-powered analysis and security scanning (Use before finishing any task)
+   - `feature-developer.md` - Feature development specialist
+   - `theme-developer.md` - Theme development expert
+   - `issue-debugger.md` - Bug investigation and resolution specialist
+   - `module-developer.md` - Custom module development expert
+
+2. **02-frontend-development/** - Frontend development specialists
+   - `hyva-specialist.md` - Hyvä theme development expert
+   - `luma-specialist.md` - Luma theme customization specialist
+   - `layout-developer.md` - XML layout construction expert
+   - `template-developer.md` - PHTML template development specialist
+
+3. **03-backend-development/** - Backend development specialists
+   - `api-developer.md` - REST/GraphQL API development expert
+   - `cronjob-developer.md` - Scheduled task implementation specialist
+   - `model-developer.md` - Data model and database expert
+
+4. **04-performance-security/** - Performance and security analysts
+   - `cache-analyst.md` - Caching optimization expert
+   - `index-analyst.md` - Database index optimization specialist
+   - `performance-analyst.md` - Performance profiling and optimization expert
+   - `security-analyst.md` - Security audit and vulnerability assessment specialist
+
+5. **05-language-specialists/** - Technology-specific specialists
+   - `php-specialist.md` - Advanced PHP development expert
+   - `alpine-specialist.md` - Alpine.js integration specialist
+   - `knockout-specialist.md` - Knockout.js development expert
+   - `less-specialist.md` - LESS preprocessing specialist
+   - `sass-specialist.md` - SASS/SCSS development expert
+   - `magewire-specialist.md` - Magewire (Livewire for Magento) specialist
+
+6. **06-infrastructure/** - Infrastructure and deployment engineers
+   - `deployment-engineer.md` - Deployment automation and CI/CD expert
+   - `environment-engineer.md` - Environment setup and configuration specialist
+
+## Naming Convention
+The repository follows a standardized naming pattern for consistency:
+
+- **Core Development**: `{function}-developer.md`, `{function}-reviewer.md`, or `{function}-debugger.md`
+- **Frontend Development**: `{technology}-specialist.md` or `{function}-developer.md`
+- **Backend Development**: `{function}-developer.md`
+- **Performance/Security**: `{domain}-analyst.md`
+- **Language Specialists**: `{technology}-specialist.md`
+- **Infrastructure**: `{function}-engineer.md`
+
+## Agent Definition Structure
+Each agent file follows the standard Claude Code agent format:
+```yaml
+---
+name: agent-name
+description: Brief description of the agent's expertise and purpose
+model: opus|sonnet (recommended model for the agent)
+---
+
+Agent instructions and specialized knowledge...
+```
+
+## Development Workflow
+1. **Agent Creation**: Create new specialized agents by following the existing naming convention and structure
+2. **Agent Organization**: Place agents in the appropriate category directory based on their primary function
+3. **Agent Testing**: Use the `magento-code-reviewer` agent proactively for code quality assurance
+4. **Version Control**: All agent definitions are tracked in Git for version control and collaboration
+
+## Key Magento 2 Concepts
+When working with these agents, they should be familiar with:
+- Magento 2 module structure (`etc/`, `Model/`, `Block/`, `Controller/`, `view/`)
+- Dependency injection and service contracts
+- Plugin system and observers
+- Layout XML and template hierarchy
+- CLI commands and cron jobs
+- API development (REST/GraphQL)
+- Performance optimization (caching, indexing)
+- Security best practices
+- Theme development (Luma, Hyvä)
+- Frontend technologies (RequireJS, KnockoutJS, Alpine.js)
+
+## Agent Specialization
+Each agent is designed to be highly specialized in their domain while maintaining awareness of Magento 2 best practices. The `code-reviewer` agent should be used proactively to ensure code quality across all development activities.
+
+## Repository Layout
+`.claude-agents/magento-agents/` is a symlink to your central agent repository (~/.claude/agents/). Do not modify files in `.claude-agents/magento-agents/` directly; suggest changes to the central repo instead.
